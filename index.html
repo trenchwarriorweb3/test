@@ -435,7 +435,16 @@
         <div class="container">
             <h1>On-Chain Lottery</h1>
             <p>Provably fair • Transparent • Decentralized</p>
-            <div class="network-badge">⚡ Base Network</div>
+            <div class="network-badge">⚡ Base Sepolia Testnet</div>
+            <div style="margin-top: 1.5rem;">
+                <button id="faucetBtn" class="wallet-connect" style="background: linear-gradient(135deg, #10b981, #059669); margin-right: 1rem; display: none;">
+                    💧 Get Test Tokens (1000 mUSDT)
+                </button>
+                <span id="faucetCooldown" style="color: #fbbf24; font-weight: 600; display: none;"></span>
+                <div id="tokenBalance" style="margin-top: 1rem; font-size: 1.1rem; font-weight: 600; display: none;">
+                    Balance: <span id="balanceAmount">0</span> mUSDT
+                </div>
+            </div>
         </div>
     </section>
 
@@ -613,11 +622,11 @@
     <script>
         // Contract addresses - REPLACE THESE WITH YOUR DEPLOYED CONTRACT ADDRESSES
         const LOTTERY_CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000';
-        const USDT_CONTRACT_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'; // Base mainnet USDT
-        const PROTOCOL_WALLET = '0x0463BAc7C10e7E9f66c148d63392077A958bDCeD'; // Replace with your protocol wallet
+        const USDT_CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000'; // MockUSDT address
+        const PROTOCOL_WALLET = '0x0000000000000000000000000000000000000000'; // Replace with your protocol wallet
         
-        const BASE_CHAIN_ID = '0x2105'; // Base mainnet (8453 in hex)
-        const BASE_RPC = 'https://mainnet.base.org';
+        const BASE_CHAIN_ID = '0x14a34'; // Base Sepolia testnet (84532 in hex)
+        const BASE_RPC = 'https://sepolia.base.org';
 
         // Contract ABIs
         const LOTTERY_ABI = [
@@ -632,7 +641,10 @@
         const ERC20_ABI = [
             "function approve(address spender, uint256 amount) external returns (bool)",
             "function allowance(address owner, address spender) external view returns (uint256)",
-            "function balanceOf(address account) external view returns (uint256)"
+            "function balanceOf(address account) external view returns (uint256)",
+            "function faucet() external",
+            "function nextFaucetClaim(address user) external view returns (uint256)",
+            "event FaucetClaimed(address indexed user, uint256 amount)"
         ];
 
         // Pool types enum
@@ -758,6 +770,8 @@
                 // Load pool data
                 await loadPoolData();
                 await loadHistory();
+                await updateTokenBalance();
+                await checkFaucetCooldown();
 
                 // Listen for events
                 setupEventListeners();
@@ -784,6 +798,82 @@
             } catch (error) {
                 console.error('Rabby connection error:', error);
                 showNotification('Failed to connect Rabby: ' + error.message, 'error');
+            }
+        }
+
+        // Update token balance
+        async function updateTokenBalance() {
+            if (!usdtContract || !userAddress) return;
+
+            try {
+                const balance = await usdtContract.balanceOf(userAddress);
+                const formattedBalance = ethers.formatUnits(balance, 6);
+                
+                document.getElementById('balanceAmount').textContent = parseFloat(formattedBalance).toFixed(2);
+                document.getElementById('tokenBalance').style.display = 'block';
+            } catch (error) {
+                console.error('Error loading balance:', error);
+            }
+        }
+
+        // Check faucet cooldown
+        async function checkFaucetCooldown() {
+            if (!usdtContract || !userAddress) return;
+
+            try {
+                const cooldownSeconds = await usdtContract.nextFaucetClaim(userAddress);
+                const faucetBtn = document.getElementById('faucetBtn');
+                const cooldownText = document.getElementById('faucetCooldown');
+                
+                faucetBtn.style.display = 'inline-block';
+                
+                if (cooldownSeconds == 0) {
+                    faucetBtn.disabled = false;
+                    faucetBtn.textContent = '💧 Get Test Tokens (1000 mUSDT)';
+                    cooldownText.style.display = 'none';
+                } else {
+                    faucetBtn.disabled = true;
+                    const minutes = Math.ceil(Number(cooldownSeconds) / 60);
+                    faucetBtn.textContent = '⏳ Faucet Cooldown Active';
+                    cooldownText.textContent = `Available in ${minutes} minutes`;
+                    cooldownText.style.display = 'inline-block';
+                    
+                    // Recheck after cooldown
+                    setTimeout(checkFaucetCooldown, Number(cooldownSeconds) * 1000);
+                }
+            } catch (error) {
+                console.error('Error checking faucet cooldown:', error);
+            }
+        }
+
+        // Claim from faucet
+        async function claimFaucet() {
+            if (!usdtContract || !userAddress) {
+                showNotification('Please connect your wallet first', 'error');
+                return;
+            }
+
+            try {
+                showNotification('Claiming test tokens from faucet...', 'info');
+                
+                const tx = await usdtContract.faucet();
+                await tx.wait();
+                
+                showNotification('Successfully claimed 1000 mUSDT! 🎉', 'success');
+                
+                await updateTokenBalance();
+                await checkFaucetCooldown();
+                
+            } catch (error) {
+                console.error('Faucet claim error:', error);
+                
+                if (error.message.includes('cooldown')) {
+                    showNotification('Faucet cooldown active. Please wait before claiming again.', 'error');
+                } else {
+                    showNotification('Failed to claim tokens: ' + error.message, 'error');
+                }
+                
+                await checkFaucetCooldown();
             }
         }
 
@@ -925,6 +1015,7 @@
             lotteryContract.on("TicketPurchased", async (buyer, poolType, numTickets, amount) => {
                 if (buyer.toLowerCase() === userAddress.toLowerCase()) {
                     showNotification(`Your tickets have been confirmed!`, 'success');
+                    await updateTokenBalance();
                 }
                 await loadPoolData();
             });
@@ -935,13 +1026,22 @@
                 const prizeAmount = ethers.formatUnits(prize, 6);
                 
                 if (winner.toLowerCase() === userAddress.toLowerCase()) {
-                    showNotification(`🎉 Congratulations! You won ${prizeAmount} USDT in the ${poolNames[poolType]} pool!`, 'success');
+                    showNotification(`🎉 Congratulations! You won ${prizeAmount} mUSDT in the ${poolNames[poolType]} pool!`, 'success');
+                    await updateTokenBalance();
                 } else {
-                    showNotification(`${poolNames[poolType]} pool #${poolId} winner drawn: ${prizeAmount} USDT`, 'info');
+                    showNotification(`${poolNames[poolType]} pool #${poolId} winner drawn: ${prizeAmount} mUSDT`, 'info');
                 }
                 
                 await loadPoolData();
                 await loadHistory();
+            });
+
+            // Listen for faucet claims
+            usdtContract.on("FaucetClaimed", async (user, amount) => {
+                if (user.toLowerCase() === userAddress.toLowerCase()) {
+                    await updateTokenBalance();
+                    await checkFaucetCooldown();
+                }
             });
         }
 
@@ -957,6 +1057,9 @@
                     openWalletModal();
                 }
             });
+
+            // Faucet button click
+            document.getElementById('faucetBtn').addEventListener('click', claimFaucet);
 
             // Modal close button
             document.getElementById('closeModal').addEventListener('click', closeWalletModal);
