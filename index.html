@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeCasino - On-Chain Lottery</title>
+    <title>DeCasino - On-Chain Lottery (Testnet)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <style>
         * {
@@ -102,6 +102,58 @@
             border-radius: 20px;
             font-weight: 600;
             font-size: 0.9rem;
+        }
+
+        .faucet-section {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .faucet-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+            display: none;
+        }
+
+        .faucet-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(16, 185, 129, 0.6);
+        }
+
+        .faucet-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .balance-display {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(245, 158, 11, 0.5);
+            padding: 1rem 2rem;
+            border-radius: 16px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fbbf24;
+            display: none;
+        }
+
+        .cooldown-text {
+            color: #fbbf24;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: none;
         }
 
         .pools-section {
@@ -390,6 +442,7 @@
             z-index: 3000;
             display: none;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
         }
 
         .notification.success {
@@ -420,6 +473,10 @@
             th, td {
                 padding: 0.8rem;
             }
+
+            .faucet-section {
+                gap: 0.5rem;
+            }
         }
     </style>
 </head>
@@ -436,12 +493,11 @@
             <h1>On-Chain Lottery</h1>
             <p>Provably fair • Transparent • Decentralized</p>
             <div class="network-badge">⚡ Base Sepolia Testnet</div>
-            <div style="margin-top: 1.5rem;">
-                <button id="faucetBtn" class="wallet-connect" style="background: linear-gradient(135deg, #10b981, #059669); margin-right: 1rem; display: none;">
-                    💧 Get Test Tokens (1000 mUSDT)
-                </button>
-                <span id="faucetCooldown" style="color: #fbbf24; font-weight: 600; display: none;"></span>
-                <div id="tokenBalance" style="margin-top: 1rem; font-size: 1.1rem; font-weight: 600; display: none;">
+            
+            <div class="faucet-section">
+                <button id="faucetBtn" class="faucet-btn">💧 Get Test Tokens (1000 mUSDT)</button>
+                <span id="faucetCooldown" class="cooldown-text"></span>
+                <div id="tokenBalance" class="balance-display">
                     Balance: <span id="balanceAmount">0</span> mUSDT
                 </div>
             </div>
@@ -464,11 +520,11 @@
                     <div class="pool-stats">
                         <div class="stat-row">
                             <span class="stat-label">Current Prize Pool</span>
-                            <span class="stat-value" id="hourlyPool">0 USDT</span>
+                            <span class="stat-value" id="hourlyPool">0 mUSDT</span>
                         </div>
                         <div class="stat-row">
                             <span class="stat-label">Ticket Price</span>
-                            <span class="stat-value">1 USDT</span>
+                            <span class="stat-value">1 mUSDT</span>
                         </div>
                         <div class="stat-row">
                             <span class="stat-label">Total Tickets</span>
@@ -498,11 +554,11 @@
                     <div class="pool-stats">
                         <div class="stat-row">
                             <span class="stat-label">Current Prize Pool</span>
-                            <span class="stat-value" id="dailyPool">0 USDT</span>
+                            <span class="stat-value" id="dailyPool">0 mUSDT</span>
                         </div>
                         <div class="stat-row">
                             <span class="stat-label">Ticket Price</span>
-                            <span class="stat-value">1 USDT</span>
+                            <span class="stat-value">1 mUSDT</span>
                         </div>
                         <div class="stat-row">
                             <span class="stat-label">Total Tickets</span>
@@ -532,11 +588,11 @@
                     <div class="pool-stats">
                         <div class="stat-row">
                             <span class="stat-label">Current Prize Pool</span>
-                            <span class="stat-value" id="monthlyPool">0 USDT</span>
+                            <span class="stat-value" id="monthlyPool">0 mUSDT</span>
                         </div>
                         <div class="stat-row">
                             <span class="stat-label">Ticket Price</span>
-                            <span class="stat-value">1 USDT</span>
+                            <span class="stat-value">1 mUSDT</span>
                         </div>
                         <div class="stat-row">
                             <span class="stat-label">Total Tickets</span>
@@ -566,7 +622,7 @@
                             <th>Pool Type</th>
                             <th>Pool ID</th>
                             <th>Winner Address</th>
-                            <th>Prize (USDT)</th>
+                            <th>Prize (mUSDT)</th>
                             <th>Timestamp</th>
                         </tr>
                     </thead>
@@ -623,7 +679,7 @@
         // Contract addresses - REPLACE THESE WITH YOUR DEPLOYED CONTRACT ADDRESSES
         const LOTTERY_CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000';
         const USDT_CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000'; // MockUSDT address
-        const PROTOCOL_WALLET = '0x0000000000000000000000000000000000000000'; // Replace with your protocol wallet
+        const PROTOCOL_WALLET = '0x0000000000000000000000000000000000000000';
         
         const BASE_CHAIN_ID = '0x14a34'; // Base Sepolia testnet (84532 in hex)
         const BASE_RPC = 'https://sepolia.base.org';
@@ -721,10 +777,8 @@
                     return;
                 }
 
-                // Request account access
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                 
-                // Check if on Base network
                 const chainId = await window.ethereum.request({ method: 'eth_chainId' });
                 if (chainId !== BASE_CHAIN_ID) {
                     try {
@@ -738,10 +792,10 @@
                                 method: 'wallet_addEthereumChain',
                                 params: [{
                                     chainId: BASE_CHAIN_ID,
-                                    chainName: 'Base',
+                                    chainName: 'Base Sepolia',
                                     nativeCurrency: { name: 'Ethereum', symbol: 'ETH', decimals: 18 },
                                     rpcUrls: [BASE_RPC],
-                                    blockExplorerUrls: ['https://basescan.org']
+                                    blockExplorerUrls: ['https://sepolia.basescan.org']
                                 }]
                             });
                         }
@@ -752,14 +806,11 @@
                 signer = await provider.getSigner();
                 userAddress = accounts[0];
 
-                // Initialize contracts
                 lotteryContract = new ethers.Contract(LOTTERY_CONTRACT_ADDRESS, LOTTERY_ABI, signer);
                 usdtContract = new ethers.Contract(USDT_CONTRACT_ADDRESS, ERC20_ABI, signer);
 
-                // Detect which wallet is being used
                 const walletName = window.ethereum.isRabby ? 'Rabby' : 'MetaMask';
 
-                // Update UI
                 document.getElementById('walletBtn').textContent = 
                     `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
                 document.getElementById('walletBtn').classList.add('connected');
@@ -767,13 +818,11 @@
                 closeWalletModal();
                 showNotification(`${walletName} connected successfully!`, 'success');
                 
-                // Load pool data
                 await loadPoolData();
                 await loadHistory();
                 await updateTokenBalance();
                 await checkFaucetCooldown();
 
-                // Listen for events
                 setupEventListeners();
 
             } catch (error) {
@@ -782,17 +831,14 @@
             }
         }
 
-        // Connect Rabby Wallet specifically
         async function connectRabby() {
             try {
-                // Check if Rabby is installed
                 if (typeof window.ethereum === 'undefined' || !window.ethereum.isRabby) {
                     showNotification('Please install Rabby Wallet! Visit rabby.io', 'error');
                     window.open('https://rabby.io', '_blank');
                     return;
                 }
 
-                // Use the same connection flow as MetaMask
                 await connectMetaMask();
 
             } catch (error) {
@@ -801,7 +847,6 @@
             }
         }
 
-        // Update token balance
         async function updateTokenBalance() {
             if (!usdtContract || !userAddress) return;
 
@@ -816,7 +861,6 @@
             }
         }
 
-        // Check faucet cooldown
         async function checkFaucetCooldown() {
             if (!usdtContract || !userAddress) return;
 
@@ -838,7 +882,6 @@
                     cooldownText.textContent = `Available in ${minutes} minutes`;
                     cooldownText.style.display = 'inline-block';
                     
-                    // Recheck after cooldown
                     setTimeout(checkFaucetCooldown, Number(cooldownSeconds) * 1000);
                 }
             } catch (error) {
@@ -846,7 +889,6 @@
             }
         }
 
-        // Claim from faucet
         async function claimFaucet() {
             if (!usdtContract || !userAddress) {
                 showNotification('Please connect your wallet first', 'error');
@@ -877,29 +919,25 @@
             }
         }
 
-        // Load pool data from contract
         async function loadPoolData() {
             if (!lotteryContract) return;
 
             try {
-                // Load hourly pool
                 const hourlyInfo = await lotteryContract.getPoolInfo(POOL_TYPES.HOURLY);
                 document.getElementById('hourlyPool').textContent = 
-                    ethers.formatUnits(hourlyInfo[0], 6) + ' USDT';
+                    ethers.formatUnits(hourlyInfo[0], 6) + ' mUSDT';
                 document.getElementById('hourlyTickets').textContent = hourlyInfo[1].toString();
                 document.getElementById('hourlyPoolId').textContent = hourlyInfo[2].toString();
 
-                // Load daily pool
                 const dailyInfo = await lotteryContract.getPoolInfo(POOL_TYPES.DAILY);
                 document.getElementById('dailyPool').textContent = 
-                    ethers.formatUnits(dailyInfo[0], 6) + ' USDT';
+                    ethers.formatUnits(dailyInfo[0], 6) + ' mUSDT';
                 document.getElementById('dailyTickets').textContent = dailyInfo[1].toString();
                 document.getElementById('dailyPoolId').textContent = dailyInfo[2].toString();
 
-                // Load monthly pool
                 const monthlyInfo = await lotteryContract.getPoolInfo(POOL_TYPES.MONTHLY);
                 document.getElementById('monthlyPool').textContent = 
-                    ethers.formatUnits(monthlyInfo[0], 6) + ' USDT';
+                    ethers.formatUnits(monthlyInfo[0], 6) + ' mUSDT';
                 document.getElementById('monthlyTickets').textContent = monthlyInfo[1].toString();
                 document.getElementById('monthlyPoolId').textContent = monthlyInfo[2].toString();
 
@@ -908,7 +946,6 @@
             }
         }
 
-        // Buy tickets
         async function buyTickets(poolType) {
             if (!lotteryContract || !userAddress) {
                 showNotification('Please connect your wallet first', 'error');
@@ -928,34 +965,30 @@
                 showNotification('Processing ticket purchase...', 'info');
 
                 const poolTypeEnum = POOL_TYPES[poolType.toUpperCase()];
-                const amount = ethers.parseUnits((numTickets * 1).toString(), 6); // 1 USDT per ticket
+                const amount = ethers.parseUnits((numTickets * 1).toString(), 6);
 
-                // Check USDT balance
                 const balance = await usdtContract.balanceOf(userAddress);
                 if (balance < amount) {
-                    showNotification('Insufficient USDT balance', 'error');
+                    showNotification('Insufficient mUSDT balance. Click the faucet button to get test tokens!', 'error');
                     return;
                 }
 
-                // Check and approve USDT if needed
                 const allowance = await usdtContract.allowance(userAddress, LOTTERY_CONTRACT_ADDRESS);
                 if (allowance < amount) {
-                    showNotification('Approving USDT...', 'info');
+                    showNotification('Approving mUSDT...', 'info');
                     const approveTx = await usdtContract.approve(LOTTERY_CONTRACT_ADDRESS, amount);
                     await approveTx.wait();
                 }
 
-                // Buy tickets
                 showNotification('Buying tickets...', 'info');
                 const tx = await lotteryContract.buyTickets(poolTypeEnum, numTickets);
                 await tx.wait();
 
                 showNotification(`Successfully bought ${numTickets} ticket(s)!`, 'success');
                 
-                // Refresh pool data
                 await loadPoolData();
+                await updateTokenBalance();
                 
-                // Reset input
                 document.getElementById(inputId).value = '1';
 
             } catch (error) {
@@ -964,7 +997,6 @@
             }
         }
 
-        // Load history from contract
         async function loadHistory() {
             if (!lotteryContract) return;
 
@@ -972,7 +1004,6 @@
                 const historyBody = document.getElementById('historyBody');
                 historyBody.innerHTML = '';
 
-                // Load history for all pool types
                 const poolNames = ['Hourly', 'Daily', 'Monthly'];
                 
                 for (let i = 0; i < 3; i++) {
@@ -987,7 +1018,7 @@
                                 <td>${poolNames[i]}</td>
                                 <td>#${entry.poolId}</td>
                                 <td>${entry.winner}</td>
-                                <td class="prize-amount">${ethers.formatUnits(entry.prize, 6)} USDT</td>
+                                <td class="prize-amount">${ethers.formatUnits(entry.prize, 6)} mUSDT</td>
                                 <td>${timestamp.toUTCString()}</td>
                             `;
                             
@@ -1007,11 +1038,9 @@
             }
         }
 
-        // Setup event listeners for contract events
         function setupEventListeners() {
             if (!lotteryContract) return;
 
-            // Listen for ticket purchases
             lotteryContract.on("TicketPurchased", async (buyer, poolType, numTickets, amount) => {
                 if (buyer.toLowerCase() === userAddress.toLowerCase()) {
                     showNotification(`Your tickets have been confirmed!`, 'success');
@@ -1020,7 +1049,6 @@
                 await loadPoolData();
             });
 
-            // Listen for winner draws
             lotteryContract.on("WinnerDrawn", async (poolType, poolId, winner, prize) => {
                 const poolNames = ['Hourly', 'Daily', 'Monthly'];
                 const prizeAmount = ethers.formatUnits(prize, 6);
@@ -1036,7 +1064,6 @@
                 await loadHistory();
             });
 
-            // Listen for faucet claims
             usdtContract.on("FaucetClaimed", async (user, amount) => {
                 if (user.toLowerCase() === userAddress.toLowerCase()) {
                     await updateTokenBalance();
@@ -1045,26 +1072,20 @@
             });
         }
 
-        // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
-            // Update timers every second
             updateTimers();
             setInterval(updateTimers, 1000);
 
-            // Wallet button click
             document.getElementById('walletBtn').addEventListener('click', () => {
                 if (!userAddress) {
                     openWalletModal();
                 }
             });
 
-            // Faucet button click
             document.getElementById('faucetBtn').addEventListener('click', claimFaucet);
 
-            // Modal close button
             document.getElementById('closeModal').addEventListener('click', closeWalletModal);
 
-            // Wallet options
             document.getElementById('metaMaskOption').addEventListener('click', connectMetaMask);
             document.getElementById('rabbyOption').addEventListener('click', connectRabby);
             document.getElementById('coinbaseOption').addEventListener('click', () => {
@@ -1074,7 +1095,6 @@
                 showNotification('WalletConnect integration coming soon', 'info');
             });
 
-            // Buy ticket buttons
             document.querySelectorAll('.buy-button').forEach(button => {
                 button.addEventListener('click', (e) => {
                     const poolType = e.target.getAttribute('data-pool');
@@ -1082,7 +1102,6 @@
                 });
             });
 
-            // Close modal when clicking outside
             window.addEventListener('click', (event) => {
                 const modal = document.getElementById('walletModal');
                 if (event.target === modal) {
@@ -1090,7 +1109,6 @@
                 }
             });
 
-            // Check if wallet is already connected
             if (window.ethereum && window.ethereum.selectedAddress) {
                 connectMetaMask();
             }
