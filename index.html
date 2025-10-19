@@ -651,8 +651,8 @@
         const EXPLORER_URL = 'https://sepolia.basescan.org';
 
         const LOTTERY_ABI = [
-            "function buyTicket(uint256 _poolId) external",
-            "function getPoolInfo(uint256 _poolId) external view returns (uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)",
+            "function buyTicket(uint8 _poolType) external",
+            "function getPoolInfo(uint8 poolType) external view returns (uint256 poolAmount, uint256 ticketCount, uint256 poolId, uint256 endTime)",
             "event WinnerSelected(uint256 indexed poolId, address indexed winner, uint256 prizeAmount)",
             "event TicketPurchased(uint256 indexed poolId, address indexed buyer, uint256 ticketNumber)",
             "event PoolReset(uint256 indexed poolId, uint256 newPoolId)"
@@ -673,9 +673,9 @@
         let poolTimers = {};
 
         const POOL_CONFIGS = [
-            { id: 1, name: 'Hourly Pool', interval: 3600 },
-            { id: 2, name: 'Daily Pool', interval: 86400 },
-            { id: 3, name: 'Monthly Pool', interval: 2592000 }
+            { id: 0, name: 'Hourly Pool', interval: 3600 },
+            { id: 1, name: 'Daily Pool', interval: 86400 },
+            { id: 2, name: 'Monthly Pool', interval: 2592000 }
         ];
 
         async function init() {
@@ -978,22 +978,25 @@
             return card;
         }
 
-        function createPoolCard(poolType, poolId, name, prizePool, ticketPrice, totalTickets, ticketsSold, lastResetTime, resetInterval, winnerPercentage) {
+        function createPoolCardV2(poolType, poolId, name, poolAmount, ticketCount, endTime, interval) {
             const card = document.createElement('div');
             card.className = 'pool-card';
             
-            const timeRemaining = calculateTimeRemaining(lastResetTime, resetInterval);
+            const now = Math.floor(Date.now() / 1000);
+            const timeRemaining = Math.max(0, endTime - now);
             
             console.log(`Creating pool card for ${name}:`, {
                 poolType,
                 poolId,
-                lastResetTime,
-                resetInterval,
+                poolAmount,
+                ticketCount,
+                endTime,
                 timeRemaining,
                 formattedTime: formatTime(timeRemaining)
             });
             
-            const maxTickets = Math.max(1, totalTickets - ticketsSold);
+            // Ticket price is 1 mUSDT per ticket (fixed)
+            const ticketPrice = 1;
             
             card.innerHTML = `
                 <div class="pool-header">
@@ -1007,35 +1010,34 @@
                 <div class="pool-info">
                     <div class="info-row">
                         <span class="info-label">Current Prize Pool:</span>
-                        <span class="info-value">${prizePool.toFixed(1)} mUSDT</span>
+                        <span class="info-value">${poolAmount.toFixed(1)} mUSDT</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Ticket Price:</span>
-                        <span class="info-value">${ticketPrice.toFixed(0)} mUSDT</span>
+                        <span class="info-value">${ticketPrice} mUSDT</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Total Tickets:</span>
-                        <span class="info-value">${totalTickets}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Tickets Sold:</span>
-                        <span class="info-value">${ticketsSold}/${totalTickets}</span>
+                        <span class="info-value">${ticketCount}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Winner Gets:</span>
-                        <span class="info-value">${winnerPercentage}%</span>
+                        <span class="info-value">90%</span>
                     </div>
                 </div>
                 <div class="ticket-input-section">
-                    <input type="number" id="tickets-${poolType}" min="1" max="${maxTickets}" value="1">
+                    <input type="number" id="tickets-${poolType}" min="1" max="100" value="1">
                 </div>
                 <button class="buy-btn" onclick="buyTickets(${poolType})">
                     Buy Tickets
                 </button>
             `;
 
-            // Store timer data for this pool
-            poolTimers[poolType] = { lastResetTime, resetInterval };
+            // Store timer data for this pool using endTime
+            poolTimers[poolType] = { 
+                endTime: endTime,
+                interval: interval
+            };
             console.log(`Stored timer data for pool ${poolType}:`, poolTimers[poolType]);
             
             return card;
@@ -1082,8 +1084,17 @@
 
         function updateAllTimers() {
             for (let poolType in poolTimers) {
-                const { lastResetTime, resetInterval } = poolTimers[poolType];
-                const timeRemaining = calculateTimeRemaining(lastResetTime, resetInterval);
+                const timerData = poolTimers[poolType];
+                let timeRemaining;
+                
+                if (timerData.endTime) {
+                    // New format - using endTime directly
+                    const now = Math.floor(Date.now() / 1000);
+                    timeRemaining = Math.max(0, timerData.endTime - now);
+                } else {
+                    // Old format - using lastResetTime + resetInterval
+                    timeRemaining = calculateTimeRemaining(timerData.lastResetTime, timerData.resetInterval);
+                }
                 
                 const countdownEl = document.getElementById(`countdown-${poolType}`);
                 if (countdownEl) {
@@ -1103,7 +1114,13 @@
         async function buyTickets(poolType) {
             // If no wallet connected, open the wallet modal
             if (!userAddress) {
+                console.log('No wallet connected, opening modal...');
                 document.getElementById('walletModal').classList.add('active');
+                return;
+            }
+
+            if (!lotteryContract || !usdtContract) {
+                showError('Contracts not initialized. Please refresh and reconnect wallet.');
                 return;
             }
 
@@ -1111,49 +1128,87 @@
                 const input = document.getElementById(`tickets-${poolType}`);
                 const numTickets = parseInt(input.value);
 
+                console.log(`Attempting to buy ${numTickets} tickets for pool ${poolType}`);
+
                 if (!numTickets || numTickets < 1) {
                     showError('Please enter valid number of tickets');
                     return;
                 }
 
-                const poolData = await lotteryContract.getPoolInfo(poolType);
-                const ticketPrice = poolData[1];
+                // Ticket price is fixed at 1 mUSDT (1000 in contract units)
+                const ticketPrice = 1000n; // 1 mUSDT = 1000 units
                 const totalCost = ticketPrice * BigInt(numTickets);
 
+                console.log('Ticket price:', ethers.formatUnits(ticketPrice, 3), 'mUSDT');
+                console.log('Total cost:', ethers.formatUnits(totalCost, 3), 'mUSDT');
+
+                // Check user balance
+                const balance = await usdtContract.balanceOf(userAddress);
+                console.log('User balance:', ethers.formatUnits(balance, 3), 'mUSDT');
+                
+                if (balance < totalCost) {
+                    showError('Insufficient mUSDT balance. Click "Get Test Tokens" to mint more.');
+                    return;
+                }
+
                 // Check and approve USDT if needed
+                console.log('Checking allowance...');
                 const allowance = await usdtContract.allowance(userAddress, LOTTERY_CONTRACT_ADDRESS);
+                console.log('Current allowance:', ethers.formatUnits(allowance, 3), 'mUSDT');
                 
                 if (allowance < totalCost) {
                     showSuccess('Approving USDT spending...');
+                    console.log('Approving', ethers.formatUnits(totalCost, 3), 'mUSDT...');
                     const approveTx = await usdtContract.approve(LOTTERY_CONTRACT_ADDRESS, totalCost);
+                    console.log('Approve tx:', approveTx.hash);
                     await approveTx.wait();
+                    console.log('Approval confirmed');
                     showSuccess('USDT approved!');
                 }
 
                 showSuccess(`Buying ${numTickets} ticket(s)...`);
                 
+                // Buy tickets one by one - poolType is now uint8 (0, 1, or 2)
                 for (let i = 0; i < numTickets; i++) {
-                    const tx = await lotteryContract.buyTicket(poolType, { gasLimit: 300000 });
-                    await tx.wait();
+                    console.log(`Buying ticket ${i + 1}/${numTickets} for pool type ${poolType}...`);
+                    const tx = await lotteryContract.buyTicket(poolType, { 
+                        gasLimit: 500000 
+                    });
+                    console.log('Buy tx:', tx.hash);
+                    const receipt = await tx.wait();
+                    console.log('Transaction confirmed:', receipt);
                 }
 
                 showSuccess(`Successfully bought ${numTickets} ticket(s)!`);
                 input.value = '1';
+                
+                // Reload data
                 await loadPools();
                 await updateBalance();
                 await loadHistory();
             } catch (error) {
-                console.error('Buy error:', error);
+                console.error('Buy tickets error:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    code: error.code,
+                    reason: error.reason,
+                    data: error.data
+                });
                 
                 let msg = 'Failed to buy tickets';
-                if (error.code === 'ACTION_REJECTED') {
+                
+                if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
                     msg = 'Transaction cancelled by user';
                 } else if (error.message.includes('insufficient funds')) {
-                    msg = 'Insufficient funds in wallet';
-                } else if (error.message.includes('Pool ended')) {
+                    msg = 'Insufficient ETH for gas fees';
+                } else if (error.message.includes('Pool ended') || error.reason?.includes('Pool ended')) {
                     msg = 'Pool has ended. Drawing winner...';
+                } else if (error.message.includes('Pool is full') || error.reason?.includes('Pool is full')) {
+                    msg = 'Pool is full. Please wait for next round.';
                 } else if (error.reason) {
                     msg = error.reason;
+                } else if (error.message) {
+                    msg = error.message;
                 }
                 
                 showError(msg);
