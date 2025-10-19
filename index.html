@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeCasino - On-Chain Lottery (Testnet)</title>
+    <title>DeCasino - On-Chain Lottery</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <style>
         * {
@@ -13,8 +13,8 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #2d1b4e 100%);
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f0e1a 0%, #1a1830 50%, #252140 100%);
             min-height: 100vh;
             color: #fff;
         }
@@ -22,160 +22,163 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 20px;
         }
 
         header {
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(20px);
-            padding: 1.2rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            border-bottom: 2px solid rgba(139, 92, 246, 0.3);
-        }
-
-        nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 20px 0;
+            margin-bottom: 40px;
         }
 
         .logo {
-            font-size: 2.2rem;
-            font-weight: 900;
-            background: linear-gradient(135deg, #8b5cf6, #ec4899, #f59e0b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #ec4899;
         }
 
-        .wallet-connect {
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        .logo-icon {
+            font-size: 32px;
+        }
+
+        .wallet-section {
+            position: relative;
+        }
+
+        .connect-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
             border: none;
-            padding: 0.8rem 1.8rem;
+            padding: 12px 24px;
             border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
-            font-weight: 700;
-            font-size: 0.95rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+            transition: all 0.3s;
         }
 
-        .wallet-connect:hover {
+        .connect-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(139, 92, 246, 0.6);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
         }
 
-        .wallet-connect.connected {
-            background: linear-gradient(135deg, #10b981, #059669);
+        .wallet-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 10px;
+            background: #1a1830;
+            border: 1px solid rgba(236, 72, 153, 0.3);
+            border-radius: 12px;
+            padding: 10px;
+            min-width: 200px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .wallet-dropdown.active {
+            display: block;
+        }
+
+        .disconnect-btn {
+            width: 100%;
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .disconnect-btn:hover {
+            background: #dc2626;
         }
 
         .hero {
             text-align: center;
-            padding: 3rem 0 2rem;
+            margin-bottom: 40px;
         }
 
         .hero h1 {
-            font-size: 3.5rem;
-            font-weight: 900;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            font-size: 48px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
+            margin-bottom: 10px;
         }
 
         .hero p {
-            font-size: 1.3rem;
-            opacity: 0.8;
-            margin-bottom: 1rem;
+            color: #9ca3af;
+            font-size: 16px;
+            margin-bottom: 20px;
         }
 
         .network-badge {
-            display: inline-block;
-            background: rgba(59, 130, 246, 0.2);
-            border: 2px solid #3b82f6;
-            padding: 0.5rem 1.2rem;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .faucet-section {
-            margin-top: 1.5rem;
-            display: flex;
-            flex-direction: column;
+            display: inline-flex;
             align-items: center;
-            gap: 1rem;
+            gap: 8px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #60a5fa;
+            margin-bottom: 20px;
         }
 
-        .faucet-btn {
-            background: linear-gradient(135deg, #10b981, #059669);
+        .test-tokens-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
             border: none;
-            padding: 1rem 2rem;
+            padding: 14px 28px;
             border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            font-weight: 700;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
-            display: none;
+            margin-bottom: 15px;
+            transition: all 0.3s;
         }
 
-        .faucet-btn:hover:not(:disabled) {
+        .test-tokens-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(16, 185, 129, 0.6);
-        }
-
-        .faucet-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
         }
 
         .balance-display {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(245, 158, 11, 0.5);
-            padding: 1rem 2rem;
-            border-radius: 16px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #fbbf24;
-            display: none;
-        }
-
-        .cooldown-text {
-            color: #fbbf24;
+            display: inline-block;
+            background: rgba(251, 191, 36, 0.1);
+            border: 2px solid rgba(251, 191, 36, 0.3);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 16px;
             font-weight: 600;
-            font-size: 0.95rem;
-            display: none;
-        }
-
-        .pools-section {
-            padding: 3rem 0;
+            color: #fbbf24;
         }
 
         .pools-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
         }
 
         .pool-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(139, 92, 246, 0.3);
-            border-radius: 24px;
-            padding: 2rem;
-            transition: all 0.3s ease;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+            border: 2px solid;
+            border-image: linear-gradient(135deg, #8b5cf6, #ec4899) 1;
+            border-radius: 20px;
+            padding: 24px;
             position: relative;
             overflow: hidden;
+            transition: all 0.3s;
         }
 
         .pool-card::before {
@@ -185,934 +188,1034 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #8b5cf6, #ec4899, #f59e0b);
+            background: linear-gradient(90deg, #8b5cf6, #ec4899, #8b5cf6);
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
         }
 
         .pool-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 60px rgba(139, 92, 246, 0.4);
-            border-color: rgba(139, 92, 246, 0.6);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3);
         }
 
         .pool-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 20px;
         }
 
         .pool-title {
-            font-size: 1.8rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .pool-badge {
-            background: rgba(139, 92, 246, 0.2);
-            border: 1px solid #8b5cf6;
-            padding: 0.4rem 0.8rem;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .timer {
-            background: rgba(236, 72, 153, 0.15);
-            border: 2px solid #ec4899;
-            padding: 1rem;
-            border-radius: 16px;
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .timer-label {
-            font-size: 0.85rem;
-            opacity: 0.8;
-            margin-bottom: 0.5rem;
-        }
-
-        .timer-display {
-            font-size: 2rem;
-            font-weight: 900;
-            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            font-weight: bold;
             color: #ec4899;
         }
 
-        .pool-stats {
-            margin-bottom: 1.5rem;
-        }
-
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.8rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .stat-row:last-child {
-            border-bottom: none;
-        }
-
-        .stat-label {
-            opacity: 0.7;
-            font-size: 0.95rem;
-        }
-
-        .stat-value {
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: #f59e0b;
-        }
-
-        .ticket-input-group {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .ticket-input {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(139, 92, 246, 0.3);
-            padding: 0.9rem;
-            border-radius: 12px;
-            color: white;
-            font-size: 1rem;
+        .pool-id-badge {
+            background: rgba(139, 92, 246, 0.2);
+            color: #a78bfa;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
             font-weight: 600;
         }
 
-        .ticket-input:focus {
-            outline: none;
-            border-color: #8b5cf6;
-            background: rgba(255, 255, 255, 0.15);
+        .timer-section {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(236, 72, 153, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
-        .buy-button {
+        .timer-label {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 8px;
+        }
+
+        .countdown {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ec4899;
+            font-family: 'Courier New', monospace;
+        }
+
+        .pool-info {
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #fbbf24;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .ticket-input-section {
+            margin-bottom: 16px;
+        }
+
+        .ticket-input-section input {
             width: 100%;
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .ticket-input-section input:focus {
+            outline: none;
+            border-color: #ec4899;
+        }
+
+        .buy-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
             color: white;
             border: none;
-            padding: 1.1rem;
-            border-radius: 14px;
-            font-size: 1.1rem;
-            font-weight: 700;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+            transition: all 0.3s;
         }
 
-        .buy-button:hover:not(:disabled) {
+        .buy-btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(139, 92, 246, 0.6);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
         }
 
-        .buy-button:disabled {
+        .buy-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
 
         .history-section {
-            padding: 3rem 0;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(26, 24, 48, 0.6);
+            border: 1px solid rgba(236, 72, 153, 0.3);
+            border-radius: 20px;
+            padding: 32px;
+            backdrop-filter: blur(10px);
         }
 
-        .section-title {
-            font-size: 2.5rem;
-            font-weight: 900;
+        .history-title {
+            font-size: 32px;
+            font-weight: bold;
             text-align: center;
-            margin-bottom: 2rem;
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
+            margin-bottom: 30px;
         }
 
         .history-table {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(139, 92, 246, 0.3);
-            border-radius: 20px;
-            overflow: hidden;
-        }
-
-        table {
             width: 100%;
             border-collapse: collapse;
         }
 
-        th, td {
-            padding: 1.2rem;
-            text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        th {
+        .history-table thead {
             background: rgba(139, 92, 246, 0.2);
-            font-weight: 700;
-            color: #8b5cf6;
+        }
+
+        .history-table th {
+            padding: 16px;
+            text-align: left;
+            color: #a78bfa;
+            font-weight: 600;
+            font-size: 12px;
             text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
 
-        td {
-            font-family: 'Courier New', monospace;
+        .history-table td {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
         }
 
-        .prize-amount {
-            color: #f59e0b;
-            font-weight: 700;
-            font-size: 1.1rem;
+        .history-table tbody tr:hover {
+            background: rgba(139, 92, 246, 0.1);
         }
 
-        .modal {
+        .tx-link {
+            color: #8b5cf6;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .tx-link:hover {
+            color: #ec4899;
+        }
+
+        .wallet-modal {
             display: none;
             position: fixed;
-            z-index: 2000;
-            left: 0;
             top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
         }
 
-        .modal-content {
-            background: linear-gradient(135deg, #1a1f3a, #2d1b4e);
-            margin: 10% auto;
-            padding: 2.5rem;
-            border: 2px solid rgba(139, 92, 246, 0.5);
-            border-radius: 24px;
+        .wallet-modal.active {
+            display: flex;
+        }
+
+        .wallet-modal-content {
+            background: #1a1830;
+            border: 2px solid rgba(236, 72, 153, 0.3);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 420px;
             width: 90%;
-            max-width: 500px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
         }
 
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 2rem;
+        .modal-title {
+            font-size: 24px;
             font-weight: bold;
-            cursor: pointer;
-            line-height: 1;
+            margin-bottom: 24px;
+            text-align: center;
+            color: #ec4899;
         }
 
-        .close:hover {
+        .close-modal {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #9ca3af;
+            transition: color 0.3s;
+        }
+
+        .close-modal:hover {
             color: #fff;
         }
 
-        .modal h2 {
-            margin-bottom: 2rem;
-            font-size: 1.8rem;
-        }
-
         .wallet-option {
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(139, 92, 246, 0.3);
-            padding: 1.2rem;
-            border-radius: 16px;
-            margin-bottom: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
         }
 
         .wallet-option:hover {
+            background: rgba(139, 92, 246, 0.2);
             border-color: #8b5cf6;
-            background: rgba(139, 92, 246, 0.1);
-            transform: translateX(5px);
+            transform: translateX(4px);
         }
 
         .wallet-icon {
-            font-size: 2rem;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .notification {
+        .wallet-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .wallet-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .wallet-info p {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .message {
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 1.2rem 1.8rem;
+            padding: 16px 24px;
             border-radius: 12px;
             font-weight: 600;
             z-index: 3000;
             display: none;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             max-width: 400px;
         }
 
-        .notification.success {
-            background: linear-gradient(135deg, #10b981, #059669);
+        .message.success {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            color: #6ee7b7;
         }
 
-        .notification.error {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
+        .message.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
         }
 
-        .notification.info {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        .message.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
         @media (max-width: 768px) {
             .pools-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .hero h1 {
-                font-size: 2.5rem;
-            }
-            
-            table {
-                font-size: 0.85rem;
-            }
-            
-            th, td {
-                padding: 0.8rem;
+                font-size: 32px;
             }
 
-            .faucet-section {
-                gap: 0.5rem;
+            .history-table {
+                font-size: 12px;
+            }
+
+            .history-table th,
+            .history-table td {
+                padding: 10px 8px;
             }
         }
     </style>
 </head>
 <body>
-    <header>
-        <nav class="container">
-            <div class="logo">🎰 DeCasino</div>
-            <button class="wallet-connect" id="walletBtn">Connect Wallet</button>
-        </nav>
-    </header>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="logo-icon">🎰</span>
+                <span>DeCasino</span>
+            </div>
+            <div class="wallet-section">
+                <button class="connect-btn" id="connectBtn" onclick="handleWalletClick()">
+                    Connect Wallet
+                </button>
+                <div class="wallet-dropdown" id="walletDropdown">
+                    <button class="disconnect-btn" onclick="disconnectWallet()">
+                        Disconnect Wallet
+                    </button>
+                </div>
+            </div>
+        </header>
 
-    <section class="hero">
-        <div class="container">
+        <div class="hero">
             <h1>On-Chain Lottery</h1>
             <p>Provably fair • Transparent • Decentralized</p>
-            <div class="network-badge">⚡ Base Sepolia Testnet</div>
+            <div class="network-badge">
+                ⚡ Base Sepolia Testnet
+            </div>
+            <div>
+                <button class="test-tokens-btn" onclick="mintTestTokens()" id="mintBtn" style="display: none;">
+                    💰 Get Test Tokens (1000 mUSDT)
+                </button>
+            </div>
+            <div class="balance-display" id="balanceDisplay" style="display: none;">
+                Balance: 0 mUSDT
+            </div>
+        </div>
+
+        <div class="pools-grid" id="poolsGrid">
+            <!-- Pools will be dynamically loaded -->
+        </div>
+
+        <div class="history-section">
+            <h2 class="history-title">Lottery History</h2>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Pool Type</th>
+                        <th>Pool ID</th>
+                        <th>Winner Address</th>
+                        <th>Prize (mUSDT)</th>
+                        <th>Transaction</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody">
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #9ca3af;">
+                            Loading lottery history...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Wallet Modal -->
+    <div class="wallet-modal" id="walletModal">
+        <div class="wallet-modal-content">
+            <span class="close-modal" onclick="closeWalletModal()">&times;</span>
+            <h2 class="modal-title">Connect Wallet</h2>
             
-            <div class="faucet-section">
-                <button id="faucetBtn" class="faucet-btn">💧 Get Test Tokens (1000 mUSDT)</button>
-                <span id="faucetCooldown" class="cooldown-text"></span>
-                <div id="tokenBalance" class="balance-display">
-                    Balance: <span id="balanceAmount">0</span> mUSDT
+            <div class="wallet-option" onclick="connectWallet('metamask')">
+                <div class="wallet-icon">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 40 40'%3E%3Cpath fill='%23E2761B' d='M32.9582 1l-13.1341 9.7183 2.4424-5.72731z'/%3E%3Cpath fill='%23E4761B' d='M7.7758 1l13.0251 9.8118-2.3254-5.82046zM28.2295 27.9123l-3.5117 5.3762 7.5095 2.0653 2.1541-7.3068zM1.2756 28.2295l2.1361 7.3068 7.5095-2.0653-3.5117-5.3762z'/%3E%3Cpath fill='%23E4761B' d='M10.4706 17.6784l-2.0786 3.1358 7.405.3369-.2469-7.969zM24.2281 17.6784l-5.1654-4.58.1688 8.0818 7.405-.3369zM10.9212 33.2885l4.4819-2.1639-3.8583-3.0062zM19.2955 31.1246l4.4819 2.1639-.6236-5.17z'/%3E%3Cpath fill='%23D7C1B3' d='M23.7774 33.2885l-4.4819-2.1639.3638 2.9025-.0405 1.2478zM10.9212 33.2885l4.1581 1.9864-.0325-1.2478.3458-2.9025z'/%3E%3Cpath fill='%23233447' d='M15.1084 25.0557l-3.6908-1.0857 2.6045-1.1937zM19.5901 25.0557l1.0863-2.2794 2.6225 1.1937z'/%3E%3Cpath fill='%23CD6116' d='M10.9212 33.2885l.6416-5.3762-4.1533.1082zM23.1358 28.0123l.6416 5.3762 3.5117-5.268zM26.3074 20.8142l-7.405.3369.6826 3.7046 1.0863-2.2794 2.6225 1.1937zM11.4176 22.77l2.6045-1.1937 1.0863 2.2794.6826-3.7046-7.405-.3369z'/%3E%3Cpath fill='%23E4751F' d='M8.2459 20.8142l3.2411 6.3073-.1082-3.1358zM23.685 24.0857l-.1082 3.1358 3.2411-6.3073zM16.4721 21.1511l-.6826 3.7046.8579 4.4205.1937-5.8204zM18.2268 21.1511l-.3729 2.295.1757 5.8385.8579-4.4205z'/%3E%3Cpath fill='%23F6851B' d='M19.5901 25.0557l-.8579 4.4205.6146.4276 3.8583-3.0062.1082-3.1358zM11.4176 22.77l.1082 3.1358 3.8583 3.0062.6146-.4276-.8579-4.4205z'/%3E%3Cpath fill='%23C0AD9E' d='M19.6443 37.3509l.0405-1.2478-.3458-.2956h-5.0948l-.3278.2956.0325 1.2478-4.1581-1.9864 1.4555 1.1937 2.9479 2.0382h5.1654l2.9659-2.0382 1.4555-1.1937z'/%3E%3Cpath fill='%23161616' d='M19.2955 31.1246l-.6146-.4276h-3.6908l-.6146.4276-.3458 2.9025.3278-.2956h5.0948l.3458.2956z'/%3E%3Cpath fill='%23763D16' d='M33.5168 11.3532l1.1937-5.6295L32.9582 1 19.2955 10.3295l4.9325 4.1804 6.9637 2.0382 1.5462-1.8006-.6736-.4857 1.0682-.9735-.8217-.6327 1.0682-.8127zM1 5.7237l1.1937 5.6295-.7327.5467 1.0863.8127-.8217.6327 1.0682.9735-.6736.4857 1.5462 1.8006 6.9637-2.0382 4.9325-4.1804L5.6982 1z'/%3E%3Cpath fill='%23F6851B' d='M32.0489 17.5703l-6.9637-2.0382 2.0786 3.1358-3.2411 6.3073 4.2615-.0542h6.3614zM8.2459 15.5321l-6.9637 2.0382-2.4424 7.3507h6.3614l4.2615.0542-3.2411-6.3073zM18.2268 21.1511l.4457-7.7177 2.0247-5.4715h-8.9638l2.0247 5.4715.4457 7.7177.1577 2.3125.0135 5.8024h3.6908l.0135-5.8024z'/%3E%3C/svg%3E" alt="MetaMask">
+                </div>
+                <div class="wallet-info">
+                    <h3>MetaMask</h3>
+                    <p>Connect using MetaMask wallet</p>
                 </div>
             </div>
-        </div>
-    </section>
 
-    <section class="pools-section">
-        <div class="container">
-            <div class="pools-grid">
-                <!-- Hourly Pool -->
-                <div class="pool-card">
-                    <div class="pool-header">
-                        <h3 class="pool-title">Hourly Pool</h3>
-                        <span class="pool-badge">Pool #<span id="hourlyPoolId">1</span></span>
-                    </div>
-                    <div class="timer">
-                        <div class="timer-label">Time Remaining</div>
-                        <div class="timer-display" id="hourlyTimer">--:--:--</div>
-                    </div>
-                    <div class="pool-stats">
-                        <div class="stat-row">
-                            <span class="stat-label">Current Prize Pool</span>
-                            <span class="stat-value" id="hourlyPool">0 mUSDT</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Ticket Price</span>
-                            <span class="stat-value">1 mUSDT</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Total Tickets</span>
-                            <span class="stat-value" id="hourlyTickets">0</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Winner Gets</span>
-                            <span class="stat-value">90%</span>
-                        </div>
-                    </div>
-                    <div class="ticket-input-group">
-                        <input type="number" class="ticket-input" id="hourlyInput" placeholder="Tickets" min="1" value="1">
-                    </div>
-                    <button class="buy-button" data-pool="hourly">Buy Tickets</button>
+            <div class="wallet-option" onclick="connectWallet('coinbase')">
+                <div class="wallet-icon">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%231652F0'/%3E%3Cpath fill='%23FFF' d='M20 32c6.627 0 12-5.373 12-12S26.627 8 20 8 8 13.373 8 20s5.373 12 12 12zm-3-17h6v2h-6v6h-2v-6a2 2 0 012-2zm8 4v6a2 2 0 01-2 2h-6v-2h6v-6h2z'/%3E%3C/svg%3E" alt="Coinbase">
                 </div>
+                <div class="wallet-info">
+                    <h3>Coinbase Wallet</h3>
+                    <p>Connect using Coinbase Wallet</p>
+                </div>
+            </div>
 
-                <!-- Daily Pool -->
-                <div class="pool-card">
-                    <div class="pool-header">
-                        <h3 class="pool-title">Daily Pool</h3>
-                        <span class="pool-badge">Pool #<span id="dailyPoolId">1</span></span>
-                    </div>
-                    <div class="timer">
-                        <div class="timer-label">Time Remaining</div>
-                        <div class="timer-display" id="dailyTimer">--:--:--</div>
-                    </div>
-                    <div class="pool-stats">
-                        <div class="stat-row">
-                            <span class="stat-label">Current Prize Pool</span>
-                            <span class="stat-value" id="dailyPool">0 mUSDT</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Ticket Price</span>
-                            <span class="stat-value">1 mUSDT</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Total Tickets</span>
-                            <span class="stat-value" id="dailyTickets">0</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Winner Gets</span>
-                            <span class="stat-value">90%</span>
-                        </div>
-                    </div>
-                    <div class="ticket-input-group">
-                        <input type="number" class="ticket-input" id="dailyInput" placeholder="Tickets" min="1" value="1">
-                    </div>
-                    <button class="buy-button" data-pool="daily">Buy Tickets</button>
+            <div class="wallet-option" onclick="connectWallet('walletconnect')">
+                <div class="wallet-icon">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%233B99FC'/%3E%3Cpath fill='%23FFF' d='M11.5 16.5c3.5-3.4 9.2-3.4 12.7 0l.4.4c.2.2.2.4 0 .6l-1.4 1.4c-.1.1-.3.1-.4 0l-.6-.5c-2.4-2.4-6.4-2.4-8.8 0l-.6.6c-.1.1-.3.1-.4 0l-1.4-1.4c-.2-.2-.2-.4 0-.6l.5-.5zm15.7 2.9l1.3 1.3c.2.2.2.4 0 .6l-5.7 5.6c-.2.2-.5.2-.7 0l-4.1-4c0-.1-.1-.1-.2 0l-4.1 4c-.2.2-.5.2-.7 0l-5.7-5.6c-.2-.2-.2-.4 0-.6l1.3-1.3c.2-.2.5-.2.7 0l4.1 4c.1.1.2.1.2 0l4.1-4c.2-.2.5-.2.7 0l4.1 4c.1.1.2.1.2 0l4.1-4c.2-.2.5-.2.7 0z'/%3E%3C/svg%3E" alt="WalletConnect">
                 </div>
+                <div class="wallet-info">
+                    <h3>WalletConnect</h3>
+                    <p>Scan with your mobile wallet</p>
+                </div>
+            </div>
 
-                <!-- Monthly Pool -->
-                <div class="pool-card">
-                    <div class="pool-header">
-                        <h3 class="pool-title">Monthly Pool</h3>
-                        <span class="pool-badge">Pool #<span id="monthlyPoolId">1</span></span>
-                    </div>
-                    <div class="timer">
-                        <div class="timer-label">Time Remaining</div>
-                        <div class="timer-display" id="monthlyTimer">--:--:--</div>
-                    </div>
-                    <div class="pool-stats">
-                        <div class="stat-row">
-                            <span class="stat-label">Current Prize Pool</span>
-                            <span class="stat-value" id="monthlyPool">0 mUSDT</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Ticket Price</span>
-                            <span class="stat-value">1 mUSDT</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Total Tickets</span>
-                            <span class="stat-value" id="monthlyTickets">0</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Winner Gets</span>
-                            <span class="stat-value">90%</span>
-                        </div>
-                    </div>
-                    <div class="ticket-input-group">
-                        <input type="number" class="ticket-input" id="monthlyInput" placeholder="Tickets" min="1" value="1">
-                    </div>
-                    <button class="buy-button" data-pool="monthly">Buy Tickets</button>
+            <div class="wallet-option" onclick="connectWallet('rabby')">
+                <div class="wallet-icon">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%238697FF'/%3E%3Cpath fill='%23FFF' d='M20 10c-2.2 0-4 1.8-4 4v2c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2v-2c0-2.2-1.8-4-4-4zm0 2c1.1 0 2 .9 2 2v2h-4v-2c0-1.1.9-2 2-2z'/%3E%3C/svg%3E" alt="Rabby">
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="history-section">
-        <div class="container">
-            <h2 class="section-title">Lottery History</h2>
-            <div class="history-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Pool Type</th>
-                            <th>Pool ID</th>
-                            <th>Winner Address</th>
-                            <th>Prize (mUSDT)</th>
-                            <th>Timestamp</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyBody">
-                        <tr>
-                            <td colspan="5" style="text-align: center; opacity: 0.6;">No lottery results yet</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
-    <!-- Wallet Connection Modal -->
-    <div id="walletModal" class="modal">
-        <div class="modal-content">
-            <span class="close" id="closeModal">&times;</span>
-            <h2>Connect Wallet</h2>
-            <div class="wallet-option" id="metaMaskOption">
-                <span class="wallet-icon">🦊</span>
-                <div>
-                    <strong>MetaMask</strong>
-                    <div style="font-size: 0.85rem; opacity: 0.7;">Connect with MetaMask</div>
-                </div>
-            </div>
-            <div class="wallet-option" id="rabbyOption">
-                <span class="wallet-icon">🐰</span>
-                <div>
-                    <strong>Rabby Wallet</strong>
-                    <div style="font-size: 0.85rem; opacity: 0.7;">Connect with Rabby</div>
-                </div>
-            </div>
-            <div class="wallet-option" id="coinbaseOption">
-                <span class="wallet-icon">🔵</span>
-                <div>
-                    <strong>Coinbase Wallet</strong>
-                    <div style="font-size: 0.85rem; opacity: 0.7;">Connect with Coinbase</div>
-                </div>
-            </div>
-            <div class="wallet-option" id="walletConnectOption">
-                <span class="wallet-icon">🔗</span>
-                <div>
-                    <strong>WalletConnect</strong>
-                    <div style="font-size: 0.85rem; opacity: 0.7;">Scan with mobile wallet</div>
+                <div class="wallet-info">
+                    <h3>Rabby Wallet</h3>
+                    <p>Connect using Rabby Wallet</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Notification -->
-    <div id="notification" class="notification"></div>
+    <!-- Messages -->
+    <div class="message" id="successMessage"></div>
+    <div class="message error" id="errorMessage"></div>
 
     <script>
-        // Contract addresses - REPLACE THESE WITH YOUR DEPLOYED CONTRACT ADDRESSES
+        // Contract addresses
         const LOTTERY_CONTRACT_ADDRESS = '0xfD90C6784374d2609A62692FA89e9A757253e60e';
-        const USDT_CONTRACT_ADDRESS = '0x1E83538a67E57DB3A4a7a4Af16294527F8c3e2c9'; // MockUSDT address
+        const USDT_CONTRACT_ADDRESS = '0x1E83538a67E57DB3A4a7a4Af16294527F8c3e2c9';
         const PROTOCOL_WALLET = '0x0463BAc7C10e7E9f66c148d63392077A958bDCeD';
-        
-        const BASE_CHAIN_ID = '0x14a34'; // Base Sepolia testnet (84532 in hex)
+        const BASE_CHAIN_ID = '0x14a34';
         const BASE_RPC = 'https://sepolia.base.org';
+        const EXPLORER_URL = 'https://sepolia.basescan.org';
 
-        // Contract ABIs
         const LOTTERY_ABI = [
-            "function buyTickets(uint8 poolType, uint256 numTickets) external",
-            "function drawWinner(uint8 poolType) external",
-            "function getPoolInfo(uint8 poolType) external view returns (uint256 poolAmount, uint256 ticketCount, uint256 poolId, uint256 endTime)",
-            "function getHistory(uint8 poolType, uint256 limit) external view returns (tuple(uint256 poolId, address winner, uint256 prize, uint256 timestamp)[])",
-            "event TicketPurchased(address indexed buyer, uint8 poolType, uint256 numTickets, uint256 amount)",
-            "event WinnerDrawn(uint8 poolType, uint256 poolId, address indexed winner, uint256 prize)"
+            "function buyTicket(uint256 _poolId) external",
+            "function getPoolInfo(uint256 _poolId) external view returns (uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)",
+            "event WinnerSelected(uint256 indexed poolId, address indexed winner, uint256 prizeAmount)",
+            "event TicketPurchased(uint256 indexed poolId, address indexed buyer, uint256 ticketNumber)",
+            "event PoolReset(uint256 indexed poolId, uint256 newPoolId)"
         ];
 
-        const ERC20_ABI = [
+        const MOCK_USDT_ABI = [
+            "function mint() external",
+            "function balanceOf(address) external view returns (uint256)",
             "function approve(address spender, uint256 amount) external returns (bool)",
-            "function allowance(address owner, address spender) external view returns (uint256)",
-            "function balanceOf(address account) external view returns (uint256)",
-            "function faucet() external",
-            "function nextFaucetClaim(address user) external view returns (uint256)",
-            "event FaucetClaimed(address indexed user, uint256 amount)"
+            "function allowance(address owner, address spender) external view returns (uint256)"
         ];
 
-        // Pool types enum
-        const POOL_TYPES = {
-            HOURLY: 0,
-            DAILY: 1,
-            MONTHLY: 2
-        };
-
-        // Global variables
         let provider = null;
         let signer = null;
-        let userAddress = null;
         let lotteryContract = null;
         let usdtContract = null;
+        let userAddress = null;
+        let poolTimers = {};
 
-        // Initialize timers
-        function updateTimers() {
-            const now = new Date();
+        const POOL_CONFIGS = [
+            { id: 1, name: 'Hourly Pool', interval: 3600 },
+            { id: 2, name: 'Daily Pool', interval: 86400 },
+            { id: 3, name: 'Monthly Pool', interval: 2592000 }
+        ];
 
-            // Hourly timer
-            const nextHour = new Date(now);
-            nextHour.setUTCHours(now.getUTCHours() + 1, 0, 0, 0);
-            updateTimerDisplay('hourlyTimer', nextHour - now);
+        async function init() {
+            console.log('Initializing DeCasino...');
+            
+            if (window.ethereum) {
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                
+                if (accounts.length > 0) {
+                    userAddress = accounts[0];
+                    provider = new ethers.BrowserProvider(window.ethereum);
+                    await setupContracts();
+                    updateUI();
+                }
 
-            // Daily timer
-            const nextDay = new Date(now);
-            nextDay.setUTCHours(24, 0, 0, 0);
-            updateTimerDisplay('dailyTimer', nextDay - now);
+                window.ethereum.on('accountsChanged', handleAccountsChanged);
+                window.ethereum.on('chainChanged', () => window.location.reload());
+            }
 
-            // Monthly timer
-            const nextMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0));
-            updateTimerDisplay('monthlyTimer', nextMonth - now);
+            // Load pools first, then start timers
+            await loadPools();
+            await loadHistory();
+            
+            // Start the countdown timers after pools are loaded
+            console.log('Starting timers...');
+            startTimers();
         }
 
-        function updateTimerDisplay(elementId, milliseconds) {
-            const hours = Math.floor(milliseconds / (1000 * 60 * 60));
-            const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
+        async function setupContracts() {
+            if (!provider) return;
+            
+            try {
+                signer = await provider.getSigner();
+                lotteryContract = new ethers.Contract(LOTTERY_CONTRACT_ADDRESS, LOTTERY_ABI, signer);
+                usdtContract = new ethers.Contract(USDT_CONTRACT_ADDRESS, MOCK_USDT_ABI, signer);
 
-            const elem = document.getElementById(elementId);
-            if (elem) {
-                elem.textContent = 
-                    `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                lotteryContract.on("WinnerSelected", () => {
+                    loadHistory();
+                    loadPools();
+                });
+
+                lotteryContract.on("PoolReset", () => {
+                    loadPools();
+                });
+
+                await updateBalance();
+            } catch (error) {
+                console.error('Setup contracts error:', error);
             }
         }
 
-        // Show notification
-        function showNotification(message, type = 'info') {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `notification ${type}`;
-            notification.style.display = 'block';
-            
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 5000);
+        function handleWalletClick() {
+            if (userAddress) {
+                document.getElementById('walletDropdown').classList.toggle('active');
+            } else {
+                document.getElementById('walletModal').classList.add('active');
+            }
         }
 
-        // Modal functions
-        function openWalletModal() {
-            document.getElementById('walletModal').style.display = 'block';
-        }
-
-        function closeWalletModal() {
-            document.getElementById('walletModal').style.display = 'none';
-        }
-
-        // Connect MetaMask or Rabby
-        async function connectMetaMask() {
+        async function connectWallet(walletType) {
             try {
-                if (typeof window.ethereum === 'undefined') {
-                    showNotification('Please install MetaMask or Rabby Wallet!', 'error');
+                if (!window.ethereum) {
+                    showError('Please install MetaMask or another Web3 wallet');
                     return;
                 }
 
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                
-                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-                if (chainId !== BASE_CHAIN_ID) {
-                    try {
-                        await window.ethereum.request({
-                            method: 'wallet_switchEthereumChain',
-                            params: [{ chainId: BASE_CHAIN_ID }],
-                        });
-                    } catch (switchError) {
-                        if (switchError.code === 4902) {
-                            await window.ethereum.request({
-                                method: 'wallet_addEthereumChain',
-                                params: [{
-                                    chainId: BASE_CHAIN_ID,
-                                    chainName: 'Base Sepolia',
-                                    nativeCurrency: { name: 'Ethereum', symbol: 'ETH', decimals: 18 },
-                                    rpcUrls: [BASE_RPC],
-                                    blockExplorerUrls: ['https://sepolia.basescan.org']
-                                }]
-                            });
-                        }
-                    }
-                }
 
-                provider = new ethers.BrowserProvider(window.ethereum);
-                signer = await provider.getSigner();
-                userAddress = accounts[0];
-
-                lotteryContract = new ethers.Contract(LOTTERY_CONTRACT_ADDRESS, LOTTERY_ABI, signer);
-                usdtContract = new ethers.Contract(USDT_CONTRACT_ADDRESS, ERC20_ABI, signer);
-
-                const walletName = window.ethereum.isRabby ? 'Rabby' : 'MetaMask';
-
-                document.getElementById('walletBtn').textContent = 
-                    `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
-                document.getElementById('walletBtn').classList.add('connected');
-                
-                closeWalletModal();
-                showNotification(`${walletName} connected successfully!`, 'success');
-                
-                await loadPoolData();
-                await loadHistory();
-                await updateTokenBalance();
-                await checkFaucetCooldown();
-
-                setupEventListeners();
-
-            } catch (error) {
-                console.error('Connection error:', error);
-                showNotification('Failed to connect wallet: ' + error.message, 'error');
-            }
-        }
-
-        async function connectRabby() {
-            try {
-                if (typeof window.ethereum === 'undefined' || !window.ethereum.isRabby) {
-                    showNotification('Please install Rabby Wallet! Visit rabby.io', 'error');
-                    window.open('https://rabby.io', '_blank');
+                if (accounts.length === 0) {
+                    showError('No accounts found');
                     return;
                 }
 
-                await connectMetaMask();
+                await switchToBaseSepolia();
 
+                userAddress = accounts[0];
+                provider = new ethers.BrowserProvider(window.ethereum);
+                await setupContracts();
+                updateUI();
+                await loadPools();
+                
+                closeWalletModal();
+                showSuccess(`Connected to ${walletType}`);
             } catch (error) {
-                console.error('Rabby connection error:', error);
-                showNotification('Failed to connect Rabby: ' + error.message, 'error');
+                console.error('Connection error:', error);
+                showError(error.message || 'Failed to connect wallet');
             }
         }
 
-        async function updateTokenBalance() {
-            if (!usdtContract || !userAddress) return;
-
+        async function switchToBaseSepolia() {
             try {
-                const balance = await usdtContract.balanceOf(userAddress);
-                const formattedBalance = ethers.formatUnits(balance, 6);
-                
-                document.getElementById('balanceAmount').textContent = parseFloat(formattedBalance).toFixed(2);
-                document.getElementById('tokenBalance').style.display = 'block';
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: BASE_CHAIN_ID }],
+                });
             } catch (error) {
-                console.error('Error loading balance:', error);
-            }
-        }
-
-        async function checkFaucetCooldown() {
-            if (!usdtContract || !userAddress) return;
-
-            try {
-                const cooldownSeconds = await usdtContract.nextFaucetClaim(userAddress);
-                const faucetBtn = document.getElementById('faucetBtn');
-                const cooldownText = document.getElementById('faucetCooldown');
-                
-                faucetBtn.style.display = 'inline-block';
-                
-                if (cooldownSeconds == 0) {
-                    faucetBtn.disabled = false;
-                    faucetBtn.textContent = '💧 Get Test Tokens (1000 mUSDT)';
-                    cooldownText.style.display = 'none';
+                if (error.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: BASE_CHAIN_ID,
+                            chainName: 'Base Sepolia',
+                            nativeCurrency: { name: 'Ethereum', symbol: 'ETH', decimals: 18 },
+                            rpcUrls: [BASE_RPC],
+                            blockExplorerUrls: [EXPLORER_URL]
+                        }]
+                    });
                 } else {
-                    faucetBtn.disabled = true;
-                    const minutes = Math.ceil(Number(cooldownSeconds) / 60);
-                    faucetBtn.textContent = '⏳ Faucet Cooldown Active';
-                    cooldownText.textContent = `Available in ${minutes} minutes`;
-                    cooldownText.style.display = 'inline-block';
-                    
-                    setTimeout(checkFaucetCooldown, Number(cooldownSeconds) * 1000);
+                    throw error;
                 }
-            } catch (error) {
-                console.error('Error checking faucet cooldown:', error);
             }
         }
 
-        async function claimFaucet() {
-            if (!usdtContract || !userAddress) {
-                showNotification('Please connect your wallet first', 'error');
+        function disconnectWallet() {
+            userAddress = null;
+            provider = null;
+            signer = null;
+            lotteryContract = null;
+            usdtContract = null;
+            updateUI();
+            document.getElementById('walletDropdown').classList.remove('active');
+            showSuccess('Wallet disconnected');
+        }
+
+        function updateUI() {
+            const btn = document.getElementById('connectBtn');
+            const mintBtn = document.getElementById('mintBtn');
+            const balanceDisplay = document.getElementById('balanceDisplay');
+
+            if (userAddress) {
+                btn.textContent = `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
+                btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                mintBtn.style.display = 'block';
+                balanceDisplay.style.display = 'inline-block';
+            } else {
+                btn.textContent = 'Connect Wallet';
+                btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                mintBtn.style.display = 'none';
+                balanceDisplay.style.display = 'none';
+            }
+        }
+
+        function handleAccountsChanged(accounts) {
+            if (accounts.length === 0) {
+                disconnectWallet();
+            } else {
+                userAddress = accounts[0];
+                setupContracts();
+                updateUI();
+                loadPools();
+            }
+        }
+
+        function closeWalletModal() {
+            document.getElementById('walletModal').classList.remove('active');
+        }
+
+        async function mintTestTokens() {
+            if (!usdtContract) {
+                showError('Please connect wallet first');
                 return;
             }
 
             try {
-                showNotification('Claiming test tokens from faucet...', 'info');
-                
-                const tx = await usdtContract.faucet();
+                showSuccess('Minting 1000 mUSDT tokens...');
+                const tx = await usdtContract.mint();
                 await tx.wait();
-                
-                showNotification('Successfully claimed 1000 mUSDT! 🎉', 'success');
-                
-                await updateTokenBalance();
-                await checkFaucetCooldown();
-                
+                showSuccess('Successfully minted 1000 mUSDT!');
+                await updateBalance();
             } catch (error) {
-                console.error('Faucet claim error:', error);
-                
-                if (error.message.includes('cooldown')) {
-                    showNotification('Faucet cooldown active. Please wait before claiming again.', 'error');
-                } else {
-                    showNotification('Failed to claim tokens: ' + error.message, 'error');
-                }
-                
-                await checkFaucetCooldown();
+                console.error('Mint error:', error);
+                showError('Failed to mint tokens: ' + (error.reason || error.message));
             }
         }
 
-        async function loadPoolData() {
-            if (!lotteryContract) return;
+        async function updateBalance() {
+            if (!usdtContract || !userAddress) return;
 
             try {
-                const hourlyInfo = await lotteryContract.getPoolInfo(POOL_TYPES.HOURLY);
-                document.getElementById('hourlyPool').textContent = 
-                    ethers.formatUnits(hourlyInfo[0], 6) + ' mUSDT';
-                document.getElementById('hourlyTickets').textContent = hourlyInfo[1].toString();
-                document.getElementById('hourlyPoolId').textContent = hourlyInfo[2].toString();
-
-                const dailyInfo = await lotteryContract.getPoolInfo(POOL_TYPES.DAILY);
-                document.getElementById('dailyPool').textContent = 
-                    ethers.formatUnits(dailyInfo[0], 6) + ' mUSDT';
-                document.getElementById('dailyTickets').textContent = dailyInfo[1].toString();
-                document.getElementById('dailyPoolId').textContent = dailyInfo[2].toString();
-
-                const monthlyInfo = await lotteryContract.getPoolInfo(POOL_TYPES.MONTHLY);
-                document.getElementById('monthlyPool').textContent = 
-                    ethers.formatUnits(monthlyInfo[0], 6) + ' mUSDT';
-                document.getElementById('monthlyTickets').textContent = monthlyInfo[1].toString();
-                document.getElementById('monthlyPoolId').textContent = monthlyInfo[2].toString();
-
+                const balance = await usdtContract.balanceOf(userAddress);
+                const formatted = (Number(balance) / 1000).toFixed(2);
+                document.getElementById('balanceDisplay').textContent = `Balance: ${formatted} mUSDT`;
             } catch (error) {
-                console.error('Error loading pool data:', error);
+                console.error('Balance error:', error);
+            }
+        }
+
+        async function loadPools() {
+            const grid = document.getElementById('poolsGrid');
+            grid.innerHTML = '';
+
+            for (const config of POOL_CONFIGS) {
+                try {
+                    let poolData;
+                    
+                    // Always try to load pool data, even without wallet connection
+                    if (lotteryContract) {
+                        // User is connected, use their connection
+                        poolData = await lotteryContract.getPoolInfo(config.id);
+                    } else if (window.ethereum) {
+                        // User not connected but has wallet extension, use it to read data
+                        const tempProvider = new ethers.BrowserProvider(window.ethereum);
+                        const tempContract = new ethers.Contract(LOTTERY_CONTRACT_ADDRESS, LOTTERY_ABI, tempProvider);
+                        poolData = await tempContract.getPoolInfo(config.id);
+                    } else {
+                        // No wallet available, show placeholder
+                        grid.appendChild(createPlaceholderCard(config));
+                        continue;
+                    }
+
+                    const [prizePool, ticketPrice, totalTickets, ticketsSold, resetInterval, lastResetTime, winnerPercentage, poolId] = poolData;
+
+                    grid.appendChild(createPoolCard(
+                        config.id,
+                        Number(poolId),
+                        config.name,
+                        Number(prizePool) / 1000,
+                        Number(ticketPrice) / 1000,
+                        Number(totalTickets),
+                        Number(ticketsSold),
+                        Number(lastResetTime),
+                        Number(resetInterval),
+                        Number(winnerPercentage)
+                    ));
+                } catch (error) {
+                    console.error(`Error loading pool ${config.id}:`, error);
+                    // Only show placeholder if there's an actual error
+                    grid.appendChild(createPlaceholderCard(config));
+                }
+            }
+        }
+
+        function createPlaceholderCard(config) {
+            const card = document.createElement('div');
+            card.className = 'pool-card';
+            card.innerHTML = `
+                <div class="pool-header">
+                    <div class="pool-title">${config.name}</div>
+                    <div class="pool-id-badge">Pool #1</div>
+                </div>
+                <div class="timer-section">
+                    <div class="timer-label">Time Remaining</div>
+                    <div class="countdown">--:--:--</div>
+                </div>
+                <div class="pool-info">
+                    <div class="info-row">
+                        <span class="info-label">Current Prize Pool:</span>
+                        <span class="info-value">-- mUSDT</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Ticket Price:</span>
+                        <span class="info-value">-- mUSDT</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Total Tickets:</span>
+                        <span class="info-value">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Winner Gets:</span>
+                        <span class="info-value">--%</span>
+                    </div>
+                </div>
+                <div style="text-align: center; padding: 20px; color: #9ca3af;">
+                    Install MetaMask to view pool details
+                </div>
+            `;
+            return card;
+        }
+
+        function createPoolCard(poolType, poolId, name, prizePool, ticketPrice, totalTickets, ticketsSold, lastResetTime, resetInterval, winnerPercentage) {
+            const card = document.createElement('div');
+            card.className = 'pool-card';
+            
+            const timeRemaining = calculateTimeRemaining(lastResetTime, resetInterval);
+            
+            console.log(`Creating pool card for ${name}:`, {
+                poolType,
+                poolId,
+                lastResetTime,
+                resetInterval,
+                timeRemaining,
+                formattedTime: formatTime(timeRemaining)
+            });
+            
+            card.innerHTML = `
+                <div class="pool-header">
+                    <div class="pool-title">${name}</div>
+                    <div class="pool-id-badge">Pool #${poolId}</div>
+                </div>
+                <div class="timer-section">
+                    <div class="timer-label">Time Remaining</div>
+                    <div class="countdown" id="countdown-${poolType}">${formatTime(timeRemaining)}</div>
+                </div>
+                <div class="pool-info">
+                    <div class="info-row">
+                        <span class="info-label">Current Prize Pool:</span>
+                        <span class="info-value">${prizePool.toFixed(1)} mUSDT</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Ticket Price:</span>
+                        <span class="info-value">${ticketPrice.toFixed(0)} mUSDT</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Total Tickets:</span>
+                        <span class="info-value">${totalTickets}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Winner Gets:</span>
+                        <span class="info-value">${winnerPercentage}%</span>
+                    </div>
+                </div>
+                <div class="ticket-input-section">
+                    <input type="number" id="tickets-${poolType}" min="1" max="${Math.max(1, totalTickets - ticketsSold)}" value="1" placeholder="Enter number of tickets">
+                </div>
+                <button class="buy-btn" onclick="buyTickets(${poolType})" ${!userAddress ? 'disabled' : ''}>
+                    ${userAddress ? 'Buy Tickets' : 'Connect Wallet First'}
+                </button>
+            `;
+
+            // Store timer data for this pool
+            poolTimers[poolType] = { lastResetTime, resetInterval };
+            console.log(`Stored timer data for pool ${poolType}:`, poolTimers[poolType]);
+            
+            return card;
+        }
+
+        function calculateTimeRemaining(lastResetTime, resetInterval) {
+            const now = Math.floor(Date.now() / 1000);
+            const nextReset = lastResetTime + resetInterval;
+            return Math.max(0, nextReset - now);
+        }
+
+        function formatTime(seconds) {
+            if (seconds <= 0) return '00:00:00';
+            
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function startTimers() {
+            console.log('Timer interval started, poolTimers:', poolTimers);
+            
+            // Update immediately on start
+            updateAllTimers();
+            
+            // Then update every second
+            setInterval(() => {
+                updateAllTimers();
+            }, 1000);
+        }
+
+        function updateAllTimers() {
+            for (let poolType in poolTimers) {
+                const { lastResetTime, resetInterval } = poolTimers[poolType];
+                const timeRemaining = calculateTimeRemaining(lastResetTime, resetInterval);
+                
+                const countdownEl = document.getElementById(`countdown-${poolType}`);
+                if (countdownEl) {
+                    countdownEl.textContent = formatTime(timeRemaining);
+                    
+                    // Reload pools when countdown reaches zero
+                    if (timeRemaining <= 0 && timeRemaining > -5) {
+                        console.log(`Pool ${poolType} timer expired, reloading...`);
+                        loadPools();
+                    }
+                } else {
+                    console.warn(`Countdown element not found for pool ${poolType}`);
+                }
             }
         }
 
         async function buyTickets(poolType) {
-            if (!lotteryContract || !userAddress) {
-                showNotification('Please connect your wallet first', 'error');
-                openWalletModal();
-                return;
-            }
-
-            const inputId = poolType + 'Input';
-            const numTickets = parseInt(document.getElementById(inputId).value);
-
-            if (!numTickets || numTickets < 1) {
-                showNotification('Please enter a valid number of tickets', 'error');
+            if (!userAddress) {
+                showError('Please connect wallet first');
+                document.getElementById('walletModal').classList.add('active');
                 return;
             }
 
             try {
-                showNotification('Processing ticket purchase...', 'info');
+                const input = document.getElementById(`tickets-${poolType}`);
+                const numTickets = parseInt(input.value);
 
-                const poolTypeEnum = POOL_TYPES[poolType.toUpperCase()];
-                const amount = ethers.parseUnits((numTickets * 1).toString(), 6);
-
-                const balance = await usdtContract.balanceOf(userAddress);
-                if (balance < amount) {
-                    showNotification('Insufficient mUSDT balance. Click the faucet button to get test tokens!', 'error');
+                if (!numTickets || numTickets < 1) {
+                    showError('Please enter valid number of tickets');
                     return;
                 }
 
+                const poolData = await lotteryContract.getPoolInfo(poolType);
+                const ticketPrice = poolData[1];
+                const totalCost = ticketPrice * BigInt(numTickets);
+
+                // Check and approve USDT if needed
                 const allowance = await usdtContract.allowance(userAddress, LOTTERY_CONTRACT_ADDRESS);
-                if (allowance < amount) {
-                    showNotification('Approving mUSDT...', 'info');
-                    const approveTx = await usdtContract.approve(LOTTERY_CONTRACT_ADDRESS, amount);
+                
+                if (allowance < totalCost) {
+                    showSuccess('Approving USDT spending...');
+                    const approveTx = await usdtContract.approve(LOTTERY_CONTRACT_ADDRESS, totalCost);
                     await approveTx.wait();
+                    showSuccess('USDT approved!');
                 }
 
-                showNotification('Buying tickets...', 'info');
-                const tx = await lotteryContract.buyTickets(poolTypeEnum, numTickets);
-                await tx.wait();
-
-                showNotification(`Successfully bought ${numTickets} ticket(s)!`, 'success');
+                showSuccess(`Buying ${numTickets} ticket(s)...`);
                 
-                await loadPoolData();
-                await updateTokenBalance();
-                
-                document.getElementById(inputId).value = '1';
+                for (let i = 0; i < numTickets; i++) {
+                    const tx = await lotteryContract.buyTicket(poolType, { gasLimit: 300000 });
+                    await tx.wait();
+                }
 
+                showSuccess(`Successfully bought ${numTickets} ticket(s)!`);
+                input.value = '1';
+                await loadPools();
+                await updateBalance();
+                await loadHistory();
             } catch (error) {
-                console.error('Error buying tickets:', error);
-                showNotification('Failed to buy tickets: ' + error.message, 'error');
+                console.error('Buy error:', error);
+                
+                let msg = 'Failed to buy tickets';
+                if (error.code === 'ACTION_REJECTED') {
+                    msg = 'Transaction cancelled by user';
+                } else if (error.message.includes('insufficient funds')) {
+                    msg = 'Insufficient funds in wallet';
+                } else if (error.message.includes('Pool ended')) {
+                    msg = 'Pool has ended. Drawing winner...';
+                } else if (error.reason) {
+                    msg = error.reason;
+                }
+                
+                showError(msg);
             }
         }
 
         async function loadHistory() {
-            if (!lotteryContract) return;
-
+            const tbody = document.getElementById('historyBody');
+            
             try {
-                const historyBody = document.getElementById('historyBody');
-                historyBody.innerHTML = '';
-
-                const poolNames = ['Hourly', 'Daily', 'Monthly'];
+                let tempProvider;
                 
-                for (let i = 0; i < 3; i++) {
-                    try {
-                        const history = await lotteryContract.getHistory(i, 20);
-                        
-                        for (const entry of history) {
-                            const row = document.createElement('tr');
-                            const timestamp = new Date(Number(entry.timestamp) * 1000);
-                            
-                            row.innerHTML = `
-                                <td>${poolNames[i]}</td>
-                                <td>#${entry.poolId}</td>
-                                <td>${entry.winner}</td>
-                                <td class="prize-amount">${ethers.formatUnits(entry.prize, 6)} mUSDT</td>
-                                <td>${timestamp.toUTCString()}</td>
-                            `;
-                            
-                            historyBody.appendChild(row);
-                        }
-                    } catch (err) {
-                        console.log(`No history for ${poolNames[i]} pool yet`);
-                    }
+                // Try to get a provider - prioritize existing connection, then wallet extension
+                if (provider) {
+                    tempProvider = provider;
+                } else if (window.ethereum) {
+                    tempProvider = new ethers.BrowserProvider(window.ethereum);
+                } else {
+                    // No provider available - show helpful message
+                    tbody.innerHTML = `
+                        <tr><td colspan="6" style="text-align: center; color: #9ca3af; padding: 40px;">
+                            <div style="margin-bottom: 10px;">📱 Install MetaMask to view lottery history</div>
+                            <div style="font-size: 12px;">History shows all past winners and prizes for transparency</div>
+                        </td></tr>
+                    `;
+                    return;
+                }
+                
+                const tempContract = new ethers.Contract(LOTTERY_CONTRACT_ADDRESS, LOTTERY_ABI, tempProvider);
+                
+                const currentBlock = await tempProvider.getBlockNumber();
+                const fromBlock = Math.max(0, currentBlock - 10000);
+                
+                const filter = tempContract.filters.WinnerSelected();
+                const events = await tempContract.queryFilter(filter, fromBlock, currentBlock);
+                
+                if (events.length === 0) {
+                    tbody.innerHTML = `
+                        <tr><td colspan="6" style="text-align: center; color: #9ca3af; padding: 40px;">
+                            <div style="margin-bottom: 10px;">🎲 No lottery results yet</div>
+                            <div style="font-size: 12px;">Winners will appear here after the first draw</div>
+                        </td></tr>
+                    `;
+                    return;
                 }
 
-                if (historyBody.children.length === 0) {
-                    historyBody.innerHTML = '<tr><td colspan="5" style="text-align: center; opacity: 0.6;">No lottery results yet</td></tr>';
-                }
+                tbody.innerHTML = '';
+                const sorted = events.sort((a, b) => b.blockNumber - a.blockNumber);
 
+                for (const event of sorted.slice(0, 20)) {
+                    const poolIdNum = Number(event.args.poolId);
+                    const winner = event.args.winner;
+                    const prize = Number(event.args.prizeAmount) / 1000;
+                    
+                    const block = await tempProvider.getBlock(event.blockNumber);
+                    const date = new Date(block.timestamp * 1000);
+                    
+                    const poolConfig = POOL_CONFIGS.find(p => p.id === poolIdNum);
+                    const poolName = poolConfig ? poolConfig.name : `Pool ${poolIdNum}`;
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${poolName}</td>
+                        <td>#${poolIdNum}</td>
+                        <td>${winner.slice(0, 6)}...${winner.slice(-4)}</td>
+                        <td>${prize.toFixed(1)}</td>
+                        <td>
+                            <a href="${EXPLORER_URL}/tx/${event.transactionHash}" 
+                               target="_blank" 
+                               class="tx-link">
+                                View Tx ↗
+                            </a>
+                        </td>
+                        <td>${date.toLocaleString()}</td>
+                    `;
+                    tbody.appendChild(row);
+                }
             } catch (error) {
-                console.error('Error loading history:', error);
+                console.error('History error:', error);
+                tbody.innerHTML = `
+                    <tr><td colspan="6" style="text-align: center; color: #9ca3af; padding: 40px;">
+                        <div style="margin-bottom: 10px;">⚠️ Unable to load lottery history</div>
+                        <div style="font-size: 12px;">Please refresh the page or install MetaMask</div>
+                    </td></tr>
+                `;
             }
         }
 
-        function setupEventListeners() {
-            if (!lotteryContract) return;
-
-            lotteryContract.on("TicketPurchased", async (buyer, poolType, numTickets, amount) => {
-                if (buyer.toLowerCase() === userAddress.toLowerCase()) {
-                    showNotification(`Your tickets have been confirmed!`, 'success');
-                    await updateTokenBalance();
-                }
-                await loadPoolData();
-            });
-
-            lotteryContract.on("WinnerDrawn", async (poolType, poolId, winner, prize) => {
-                const poolNames = ['Hourly', 'Daily', 'Monthly'];
-                const prizeAmount = ethers.formatUnits(prize, 6);
-                
-                if (winner.toLowerCase() === userAddress.toLowerCase()) {
-                    showNotification(`🎉 Congratulations! You won ${prizeAmount} mUSDT in the ${poolNames[poolType]} pool!`, 'success');
-                    await updateTokenBalance();
-                } else {
-                    showNotification(`${poolNames[poolType]} pool #${poolId} winner drawn: ${prizeAmount} mUSDT`, 'info');
-                }
-                
-                await loadPoolData();
-                await loadHistory();
-            });
-
-            usdtContract.on("FaucetClaimed", async (user, amount) => {
-                if (user.toLowerCase() === userAddress.toLowerCase()) {
-                    await updateTokenBalance();
-                    await checkFaucetCooldown();
-                }
-            });
+        function showSuccess(msg) {
+            const el = document.getElementById('successMessage');
+            el.textContent = msg;
+            el.classList.add('success', 'active');
+            setTimeout(() => el.classList.remove('active'), 5000);
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            updateTimers();
-            setInterval(updateTimers, 1000);
+        function showError(msg) {
+            const el = document.getElementById('errorMessage');
+            el.textContent = msg;
+            el.classList.add('active');
+            setTimeout(() => el.classList.remove('active'), 5000);
+        }
 
-            document.getElementById('walletBtn').addEventListener('click', () => {
-                if (!userAddress) {
-                    openWalletModal();
-                }
-            });
-
-            document.getElementById('faucetBtn').addEventListener('click', claimFaucet);
-
-            document.getElementById('closeModal').addEventListener('click', closeWalletModal);
-
-            document.getElementById('metaMaskOption').addEventListener('click', connectMetaMask);
-            document.getElementById('rabbyOption').addEventListener('click', connectRabby);
-            document.getElementById('coinbaseOption').addEventListener('click', () => {
-                showNotification('Coinbase Wallet support coming soon', 'info');
-            });
-            document.getElementById('walletConnectOption').addEventListener('click', () => {
-                showNotification('WalletConnect integration coming soon', 'info');
-            });
-
-            document.querySelectorAll('.buy-button').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const poolType = e.target.getAttribute('data-pool');
-                    buyTickets(poolType);
-                });
-            });
-
-            window.addEventListener('click', (event) => {
-                const modal = document.getElementById('walletModal');
-                if (event.target === modal) {
-                    closeWalletModal();
-                }
-            });
-
-            if (window.ethereum && window.ethereum.selectedAddress) {
-                connectMetaMask();
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('walletDropdown');
+            const btn = document.getElementById('connectBtn');
+            
+            if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+                dropdown.classList.remove('active');
             }
         });
+
+        window.addEventListener('load', init);
     </script>
 </body>
 </html>
