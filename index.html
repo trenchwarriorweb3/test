@@ -875,18 +875,32 @@
                     if (lotteryContract) {
                         // User is connected, use their connection
                         poolData = await lotteryContract.getPoolInfo(config.id);
+                        console.log(`Pool ${config.id} data from connected contract:`, poolData);
                     } else if (window.ethereum) {
                         // User not connected but has wallet extension, use it to read data
                         const tempProvider = new ethers.BrowserProvider(window.ethereum);
                         const tempContract = new ethers.Contract(LOTTERY_CONTRACT_ADDRESS, LOTTERY_ABI, tempProvider);
                         poolData = await tempContract.getPoolInfo(config.id);
+                        console.log(`Pool ${config.id} data from BrowserProvider:`, poolData);
                     } else {
                         // No wallet available, show placeholder
+                        console.warn(`No wallet available for pool ${config.id}`);
                         grid.appendChild(createPlaceholderCard(config));
                         continue;
                     }
 
                     const [prizePool, ticketPrice, totalTickets, ticketsSold, resetInterval, lastResetTime, winnerPercentage, poolId] = poolData;
+
+                    console.log(`Pool ${config.id} parsed data:`, {
+                        prizePool: prizePool.toString(),
+                        ticketPrice: ticketPrice.toString(),
+                        totalTickets: totalTickets.toString(),
+                        ticketsSold: ticketsSold.toString(),
+                        resetInterval: resetInterval.toString(),
+                        lastResetTime: lastResetTime.toString(),
+                        winnerPercentage: winnerPercentage.toString(),
+                        poolId: poolId.toString()
+                    });
 
                     grid.appendChild(createPoolCard(
                         config.id,
@@ -902,15 +916,31 @@
                     ));
                 } catch (error) {
                     console.error(`Error loading pool ${config.id}:`, error);
-                    // Only show placeholder if there's an actual error
+                    // Show placeholder on error
                     grid.appendChild(createPlaceholderCard(config));
                 }
             }
+            
+            // Log poolTimers after all pools are loaded
+            console.log('All pools loaded. Pool timers:', poolTimers);
         }
 
         function createPlaceholderCard(config) {
             const card = document.createElement('div');
             card.className = 'pool-card';
+            
+            // Calculate a mock countdown based on pool type for demo purposes
+            const now = Math.floor(Date.now() / 1000);
+            const mockLastReset = now - 1800; // Started 30 mins ago for hourly
+            const mockInterval = config.interval;
+            const mockRemaining = calculateTimeRemaining(mockLastReset, mockInterval);
+            
+            // Store mock timer data
+            poolTimers[config.id] = { 
+                lastResetTime: mockLastReset, 
+                resetInterval: mockInterval 
+            };
+            
             card.innerHTML = `
                 <div class="pool-header">
                     <div class="pool-title">${config.name}</div>
@@ -918,29 +948,32 @@
                 </div>
                 <div class="timer-section">
                     <div class="timer-label">Time Remaining</div>
-                    <div class="countdown">--:--:--</div>
+                    <div class="countdown" id="countdown-${config.id}">${formatTime(mockRemaining)}</div>
                 </div>
                 <div class="pool-info">
                     <div class="info-row">
                         <span class="info-label">Current Prize Pool:</span>
-                        <span class="info-value">-- mUSDT</span>
+                        <span class="info-value">Loading...</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Ticket Price:</span>
-                        <span class="info-value">-- mUSDT</span>
+                        <span class="info-value">Loading...</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Total Tickets:</span>
-                        <span class="info-value">--</span>
+                        <span class="info-value">Loading...</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Winner Gets:</span>
-                        <span class="info-value">--%</span>
+                        <span class="info-value">90%</span>
                     </div>
                 </div>
-                <div style="text-align: center; padding: 20px; color: #9ca3af;">
-                    Install MetaMask to view pool details
+                <div class="ticket-input-section">
+                    <input type="number" id="tickets-${config.id}" min="1" max="10" value="1" placeholder="Number of tickets" disabled>
                 </div>
+                <button class="buy-btn" disabled>
+                    Install MetaMask to Buy Tickets
+                </button>
             `;
             return card;
         }
@@ -959,6 +992,8 @@
                 timeRemaining,
                 formattedTime: formatTime(timeRemaining)
             });
+            
+            const maxTickets = Math.max(1, totalTickets - ticketsSold);
             
             card.innerHTML = `
                 <div class="pool-header">
@@ -983,15 +1018,19 @@
                         <span class="info-value">${totalTickets}</span>
                     </div>
                     <div class="info-row">
+                        <span class="info-label">Tickets Sold:</span>
+                        <span class="info-value">${ticketsSold}/${totalTickets}</span>
+                    </div>
+                    <div class="info-row">
                         <span class="info-label">Winner Gets:</span>
                         <span class="info-value">${winnerPercentage}%</span>
                     </div>
                 </div>
                 <div class="ticket-input-section">
-                    <input type="number" id="tickets-${poolType}" min="1" max="${Math.max(1, totalTickets - ticketsSold)}" value="1" placeholder="Enter number of tickets">
+                    <input type="number" id="tickets-${poolType}" min="1" max="${maxTickets}" value="1" placeholder="Number of tickets" ${!userAddress ? 'disabled' : ''}>
                 </div>
                 <button class="buy-btn" onclick="buyTickets(${poolType})" ${!userAddress ? 'disabled' : ''}>
-                    ${userAddress ? 'Buy Tickets' : 'Connect Wallet First'}
+                    ${userAddress ? 'Buy Tickets' : 'Connect Wallet to Buy Tickets'}
                 </button>
             `;
 
@@ -1005,7 +1044,18 @@
         function calculateTimeRemaining(lastResetTime, resetInterval) {
             const now = Math.floor(Date.now() / 1000);
             const nextReset = lastResetTime + resetInterval;
-            return Math.max(0, nextReset - now);
+            const remaining = Math.max(0, nextReset - now);
+            
+            console.log('Time calculation:', {
+                now,
+                lastResetTime,
+                resetInterval,
+                nextReset,
+                remaining,
+                remainingFormatted: formatTime(remaining)
+            });
+            
+            return remaining;
         }
 
         function formatTime(seconds) {
