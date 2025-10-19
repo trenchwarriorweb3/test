@@ -969,10 +969,10 @@
                     </div>
                 </div>
                 <div class="ticket-input-section">
-                    <input type="number" id="tickets-${config.id}" min="1" max="10" value="1" placeholder="Number of tickets" disabled>
+                    <input type="number" id="tickets-${config.id}" min="1" max="10" value="1">
                 </div>
-                <button class="buy-btn" disabled>
-                    Install MetaMask to Buy Tickets
+                <button class="buy-btn" onclick="buyTickets(${config.id})">
+                    Buy Tickets
                 </button>
             `;
             return card;
@@ -1027,10 +1027,10 @@
                     </div>
                 </div>
                 <div class="ticket-input-section">
-                    <input type="number" id="tickets-${poolType}" min="1" max="${maxTickets}" value="1" placeholder="Number of tickets" ${!userAddress ? 'disabled' : ''}>
+                    <input type="number" id="tickets-${poolType}" min="1" max="${maxTickets}" value="1">
                 </div>
-                <button class="buy-btn" onclick="buyTickets(${poolType})" ${!userAddress ? 'disabled' : ''}>
-                    ${userAddress ? 'Buy Tickets' : 'Connect Wallet to Buy Tickets'}
+                <button class="buy-btn" onclick="buyTickets(${poolType})">
+                    Buy Tickets
                 </button>
             `;
 
@@ -1101,8 +1101,8 @@
         }
 
         async function buyTickets(poolType) {
+            // If no wallet connected, open the wallet modal
             if (!userAddress) {
-                showError('Please connect wallet first');
                 document.getElementById('walletModal').classList.add('active');
                 return;
             }
