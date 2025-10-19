@@ -651,10 +651,10 @@
         const EXPLORER_URL = 'https://sepolia.basescan.org';
 
         const LOTTERY_ABI = [
-            "function buyTicket(uint8 _poolType) external",
+            "function buyTickets(uint8 poolType, uint256 numTickets) external",
             "function getPoolInfo(uint8 poolType) external view returns (uint256 poolAmount, uint256 ticketCount, uint256 poolId, uint256 endTime)",
             "event WinnerSelected(uint256 indexed poolId, address indexed winner, uint256 prizeAmount)",
-            "event TicketPurchased(uint256 indexed poolId, address indexed buyer, uint256 ticketNumber)",
+            "event TicketPurchased(address indexed buyer, uint8 indexed poolType, uint256 numTickets, uint256 totalCost)",
             "event PoolReset(uint256 indexed poolId, uint256 newPoolId)"
         ];
 
@@ -1017,7 +1017,7 @@
                         <span class="info-value">${ticketPrice} mUSDT</span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">Total Tickets:</span>
+                        <span class="info-label">Total Tickets Sold:</span>
                         <span class="info-value">${ticketCount}</span>
                     </div>
                     <div class="info-row">
@@ -1026,7 +1026,8 @@
                     </div>
                 </div>
                 <div class="ticket-input-section">
-                    <input type="number" id="tickets-${poolType}" min="1" max="100" value="1">
+                    <input type="number" id="tickets-${poolType}" min="1" max="100" value="1" 
+                           placeholder="Tickets (${ticketPrice} mUSDT each)">
                 </div>
                 <button class="buy-btn" onclick="buyTickets(${poolType})">
                     Buy Tickets
@@ -1168,15 +1169,22 @@
 
                 showSuccess(`Buying ${numTickets} ticket(s)...`);
                 
-                // Buy tickets one by one - poolType is now uint8 (0, 1, or 2)
-                for (let i = 0; i < numTickets; i++) {
-                    console.log(`Buying ticket ${i + 1}/${numTickets} for pool type ${poolType}...`);
-                    const tx = await lotteryContract.buyTicket(poolType, { 
-                        gasLimit: 500000 
-                    });
-                    console.log('Buy tx:', tx.hash);
+                // Call buyTickets (plural) with both parameters
+                console.log(`Calling buyTickets(${poolType}, ${numTickets})...`);
+                
+                try {
+                    const tx = await lotteryContract.buyTickets(poolType, numTickets);
+                    console.log('Buy tx submitted:', tx.hash);
+                    console.log('Waiting for confirmation...');
                     const receipt = await tx.wait();
                     console.log('Transaction confirmed:', receipt);
+                    
+                    if (receipt.status === 0) {
+                        throw new Error('Transaction failed - check contract requirements');
+                    }
+                } catch (txError) {
+                    console.error(`Failed to buy tickets:`, txError);
+                    throw txError;
                 }
 
                 showSuccess(`Successfully bought ${numTickets} ticket(s)!`);
